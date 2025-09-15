@@ -2,6 +2,12 @@
 
 Este é um aplicativo móvel desenvolvido com React Native e Expo para o gerenciamento de uma frota de veículos. Ele permite cadastrar, visualizar, editar, filtrar e excluir veículos, consumindo uma API local simulada com `json-server`.
 
+## 🎥 Apresentação em Vídeo
+
+Assista a uma demonstração completa do projeto e suas funcionalidades no YouTube:
+
+[![Apresentação do App de Gestão de Veículos](https://img.youtube.com/vi/_yZgcIf7A5g/0.jpg)](https://youtu.be/_yZgcIf7A5g)
+
 ## 📋 Funcionalidades
 
 - **Listagem e Filtragem:** Visualize todos os veículos cadastrados e filtre a lista por placa ou modelo.
