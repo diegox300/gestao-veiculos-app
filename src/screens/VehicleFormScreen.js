@@ -1,6 +1,6 @@
-// src/screens/VehicleFormScreen.js
 import React, { useState, useEffect } from "react";
-import { View, TextInput, Button, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
+import { TextInput, Button } from "react-native-paper";
 import { getVeiculoById, createVeiculo, updateVeiculo } from "../services/api";
 
 const VehicleFormScreen = ({ route, navigation }) => {
@@ -12,13 +12,14 @@ const VehicleFormScreen = ({ route, navigation }) => {
     ano: "",
     cor: "",
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (vehicleId) {
       const fetchVehicle = async () => {
         try {
           const { data } = await getVeiculoById(vehicleId);
-          setFormData({ ...data, ano: data.ano.toString() }); // Converte ano para string
+          setFormData({ ...data, ano: data.ano.toString() });
         } catch (error) {
           console.error("Erro ao buscar dados do veículo:", error);
         }
@@ -32,15 +33,15 @@ const VehicleFormScreen = ({ route, navigation }) => {
   };
 
   const handleSubmit = async () => {
-    // Validação simples
     if (!formData.placa || !formData.marca || !formData.modelo) {
       Alert.alert("Erro", "Placa, Marca e Modelo são obrigatórios.");
       return;
     }
 
+    setLoading(true);
     const vehicleData = {
       ...formData,
-      ano: parseInt(formData.ano, 10) || new Date().getFullYear(), // Converte ano para número
+      ano: parseInt(formData.ano, 10) || new Date().getFullYear(),
     };
 
     try {
@@ -55,80 +56,74 @@ const VehicleFormScreen = ({ route, navigation }) => {
     } catch (error) {
       console.error("Erro ao salvar veículo:", error);
       Alert.alert("Erro", "Não foi possível salvar o veículo.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.input}
-        placeholder="Placa"
+        label="Placa"
         value={formData.placa}
         onChangeText={(text) => handleChange("placa", text)}
+        style={styles.input}
+        mode="outlined"
       />
       <TextInput
-        style={styles.input}
-        placeholder="Marca"
+        label="Marca"
         value={formData.marca}
         onChangeText={(text) => handleChange("marca", text)}
+        style={styles.input}
+        mode="outlined"
       />
       <TextInput
-        style={styles.input}
-        placeholder="Modelo"
+        label="Modelo"
         value={formData.modelo}
         onChangeText={(text) => handleChange("modelo", text)}
+        style={styles.input}
+        mode="outlined"
       />
       <TextInput
-        style={styles.input}
-        placeholder="Ano"
+        label="Ano"
         value={formData.ano}
         onChangeText={(text) => handleChange("ano", text)}
         keyboardType="numeric"
+        style={styles.input}
+        mode="outlined"
       />
       <TextInput
-        style={styles.input}
-        placeholder="Cor"
+        label="Cor"
         value={formData.cor}
         onChangeText={(text) => handleChange("cor", text)}
+        style={styles.input}
+        mode="outlined"
       />
       <Button
-        title={vehicleId ? "Atualizar" : "Cadastrar"}
+        mode="contained"
         onPress={handleSubmit}
-      />
+        style={styles.button}
+        loading={loading}
+        disabled={loading}
+      >
+        {vehicleId ? "Atualizar" : "Cadastrar"}
+      </Button>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0f0f0" },
-  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
-  itemContainer: {
-    backgroundColor: "white",
-    padding: 20,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+  container: {
+    flex: 1,
+    padding: 16,
   },
-  itemTitle: { fontSize: 18, fontWeight: "bold" },
-  itemSubtitle: { fontSize: 14, color: "gray" },
-  fab: {
-    position: "absolute",
-    width: 60,
-    height: 60,
-    alignItems: "center",
-    justifyContent: "center",
-    right: 30,
-    bottom: 30,
-    backgroundColor: "#007bff",
-    borderRadius: 30,
-    elevation: 8,
+  input: {
+    marginBottom: 12,
   },
-  fabIcon: { fontSize: 30, color: "white" },
+  button: {
+    marginTop: 8,
+    paddingVertical: 8,
+  },
 });
 
 export default VehicleFormScreen;

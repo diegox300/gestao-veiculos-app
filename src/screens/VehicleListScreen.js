@@ -1,19 +1,18 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { View, FlatList, StyleSheet } from "react-native";
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
-  TextInput, // Importar TextInput
-} from "react-native";
+  Card,
+  FAB,
+  TextInput,
+  Avatar,
+} from "react-native-paper";
 import { useFocusEffect } from "@react-navigation/native";
 import { getVeiculos } from "../services/api";
 
 const VehicleListScreen = ({ navigation }) => {
   const [veiculos, setVeiculos] = useState([]);
-  const [filteredVeiculos, setFilteredVeiculos] = useState([]); // Lista para exibição
+  const [filteredVeiculos, setFilteredVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     placa: "",
@@ -26,7 +25,7 @@ const VehicleListScreen = ({ navigation }) => {
       setLoading(true);
       const response = await getVeiculos();
       setVeiculos(response.data);
-      setFilteredVeiculos(response.data); // Inicializa a lista filtrada
+      setFilteredVeiculos(response.data);
     } catch (error) {
       console.error("Erro ao buscar veículos:", error);
       alert("Não foi possível carregar os veículos.");
@@ -41,7 +40,6 @@ const VehicleListScreen = ({ navigation }) => {
     }, [])
   );
 
-  // Efeito para aplicar os filtros
   useEffect(() => {
     let data = [...veiculos];
     if (filters.placa) {
@@ -68,62 +66,69 @@ const VehicleListScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <ActivityIndicator size="large" color="#007bff" style={styles.loader} />
+      <ActivityIndicator
+        animating={true}
+        size="large"
+        style={styles.loader}
+      />
     );
   }
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.itemContainer}
+    <Card
+      style={styles.card}
       onPress={() =>
         navigation.navigate("VehicleDetail", { vehicleId: item.id })
       }
     >
-      <Text style={styles.itemTitle}>
-        {item.marca} {item.modelo}
-      </Text>
-      <Text style={styles.itemSubtitle}>
-        {item.placa} - {item.ano} - {item.cor}
-      </Text>
-    </TouchableOpacity>
+      <Card.Title
+        title={`${item.marca} ${item.modelo}`}
+        subtitle={`${item.placa} - ${item.ano} - ${item.cor}`}
+        left={(props) => <Avatar.Icon {...props} icon="car" />}
+      />
+    </Card>
   );
 
   return (
     <View style={styles.container}>
-      {/* Seção de Filtros */}
       <View style={styles.filterContainer}>
         <TextInput
-          style={styles.input}
-          placeholder="Filtrar por Placa"
+          label="Filtrar por Placa"
           value={filters.placa}
           onChangeText={(text) => handleFilterChange("placa", text)}
+          style={styles.input}
+          mode="outlined"
+          left={<TextInput.Icon icon="magnify" />}
         />
         <TextInput
-          style={styles.input}
-          placeholder="Filtrar por Marca"
+          label="Filtrar por Marca"
           value={filters.marca}
           onChangeText={(text) => handleFilterChange("marca", text)}
+          style={styles.input}
+          mode="outlined"
+          left={<TextInput.Icon icon="magnify" />}
         />
         <TextInput
-          style={styles.input}
-          placeholder="Filtrar por Modelo"
+          label="Filtrar por Modelo"
           value={filters.modelo}
           onChangeText={(text) => handleFilterChange("modelo", text)}
+          style={styles.input}
+          mode="outlined"
+          left={<TextInput.Icon icon="magnify" />}
         />
       </View>
 
       <FlatList
-        data={filteredVeiculos} // Usar a lista filtrada
+        data={filteredVeiculos}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ paddingBottom: 80 }}
+        contentContainerStyle={styles.list}
       />
-      <TouchableOpacity
+      <FAB
         style={styles.fab}
+        icon="plus"
         onPress={() => navigation.navigate("VehicleForm")}
-      >
-        <Text style={styles.fabIcon}>+</Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 };
@@ -131,7 +136,6 @@ const VehicleListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
   },
   loader: {
     flex: 1,
@@ -139,53 +143,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   filterContainer: {
-    padding: 10,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   input: {
-    height: 40,
-    borderColor: "#ddd",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    backgroundColor: "#fff",
+    marginBottom: 8,
   },
-  itemContainer: {
-    backgroundColor: "#fff",
-    padding: 15,
+  list: {
+    paddingHorizontal: 16,
+    paddingBottom: 90, // Espaço para o FAB não sobrepor o último item
+  },
+  card: {
     marginVertical: 8,
-    marginHorizontal: 16,
-    borderRadius: 8,
-    elevation: 2,
-  },
-  itemTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  itemSubtitle: {
-    fontSize: 14,
-    color: "#666",
   },
   fab: {
     position: "absolute",
-    bottom: 30,
-    right: 30,
-    width: 60,
-    height: 60,
-    backgroundColor: "#007bff",
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 4,
-  },
-  fabIcon: {
-    color: "#fff",
-    fontSize: 24,
-    lineHeight: 24,
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
 });
 

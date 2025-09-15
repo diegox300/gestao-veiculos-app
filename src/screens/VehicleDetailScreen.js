@@ -1,24 +1,28 @@
-// src/screens/VehicleDetailScreen.js
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { View, StyleSheet, Alert } from "react-native";
 import {
-  View,
-  Text,
-  Button,
-  StyleSheet,
-  Alert,
   ActivityIndicator,
-  Modal,
-} from "react-native";
-import { useFocusEffect } from "@react-navigation/native"; // Importar useFocusEffect
+  Card,
+  Paragraph,
+  Button,
+  Dialog,
+  Portal,
+  useTheme,
+  Avatar, // 1. Importar Avatar
+  Text as PaperText, // 2. Renomear Text para evitar conflito
+} from "react-native-paper";
+import { useFocusEffect } from "@react-navigation/native";
 import { getVeiculoById, deleteVeiculo } from "../services/api";
 
 const VehicleDetailScreen = ({ route, navigation }) => {
+  // ... (código existente sem alterações)
+
   const { vehicleId } = route.params;
   const [vehicle, setVehicle] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDialogVisible, setIsDialogVisible] = useState(false);
+  const { colors } = useTheme();
 
   const fetchVehicle = async () => {
-    console.log("Buscando dados atualizados do veículo...");
     try {
       const { data } = await getVeiculoById(vehicleId);
       setVehicle(data);
@@ -27,128 +31,140 @@ const VehicleDetailScreen = ({ route, navigation }) => {
     }
   };
 
-  // Usar useFocusEffect para re-buscar os dados sempre que a tela ganhar foco
   useFocusEffect(
     React.useCallback(() => {
       fetchVehicle();
     }, [vehicleId])
   );
 
-  const handleDeletePress = () => {
-    console.log("Botão Excluir pressionado, mostrando o modal.");
-    setIsModalVisible(true);
-  };
+  const showDialog = () => setIsDialogVisible(true);
+  const hideDialog = () => setIsDialogVisible(false);
 
   const performDelete = async () => {
-    console.log("Usuário confirmou a exclusão. Tentando apagar...");
+    hideDialog();
     try {
       await deleteVeiculo(vehicleId);
-      console.log("Veículo apagado com sucesso.");
-      setIsModalVisible(false);
       navigation.goBack();
     } catch (error) {
-      setIsModalVisible(false);
-      console.error(
-        "Erro ao excluir veículo:",
-        error.toJSON ? error.toJSON() : error
-      );
+      console.error("Erro ao excluir veículo:", error);
       Alert.alert("Erro", "Não foi possível excluir o veículo.");
     }
   };
 
   if (!vehicle) {
-    return <ActivityIndicator size="large" color="#007bff" />;
+    return (
+      <ActivityIndicator animating={true} size="large" style={styles.loader} />
+    );
   }
 
   return (
     <View style={styles.container}>
-      <Modal
-        transparent={true}
-        animationType="fade"
-        visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Confirmar Exclusão</Text>
-            <Text style={styles.modalText}>
+      <Portal>
+        <Dialog visible={isDialogVisible} onDismiss={hideDialog}>
+          <Dialog.Title>Confirmar Exclusão</Dialog.Title>
+          <Dialog.Content>
+            <Paragraph>
               Você tem certeza que deseja excluir este veículo?
-            </Text>
-            <View style={styles.modalButtonContainer}>
-              <Button
-                title="Cancelar"
-                onPress={() => setIsModalVisible(false)}
-              />
-              <Button title="Excluir" color="red" onPress={performDelete} />
-            </View>
-          </View>
-        </View>
-      </Modal>
+            </Paragraph>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog}>Cancelar</Button>
+            <Button onPress={performDelete} textColor={colors.error}>
+              Excluir
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
 
-      <Text style={styles.detailText}>Placa: {vehicle.placa}</Text>
-      <Text style={styles.detailText}>Marca: {vehicle.marca}</Text>
-      <Text style={styles.detailText}>Modelo: {vehicle.modelo}</Text>
-      <Text style={styles.detailText}>Ano: {vehicle.ano}</Text>
-      <Text style={styles.detailText}>Cor: {vehicle.cor}</Text>
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Editar"
-          onPress={() =>
-            navigation.navigate("VehicleForm", { vehicleId: vehicle.id })
-          }
+      <Card style={styles.card}>
+        <Card.Title
+          title="Detalhes do Veículo"
+          titleStyle={styles.cardTitle}
+          left={(props) => <Avatar.Icon {...props} icon="car-info" />} // 3. Usar Avatar.Icon
         />
-        <Button title="Excluir" color="red" onPress={handleDeletePress} />
-      </View>
+        <Card.Content>
+          {/* 4. Usar PaperText para os detalhes */}
+          <View style={styles.detailRow}>
+            <PaperText style={styles.detailLabel}>Placa:</PaperText>
+            <PaperText style={styles.detailValue}>{vehicle.placa}</PaperText>
+          </View>
+          <View style={styles.detailRow}>
+            <PaperText style={styles.detailLabel}>Marca:</PaperText>
+            <PaperText style={styles.detailValue}>{vehicle.marca}</PaperText>
+          </View>
+          <View style={styles.detailRow}>
+            <PaperText style={styles.detailLabel}>Modelo:</PaperText>
+            <PaperText style={styles.detailValue}>{vehicle.modelo}</PaperText>
+          </View>
+          <View style={styles.detailRow}>
+            <PaperText style={styles.detailLabel}>Ano:</PaperText>
+            <PaperText style={styles.detailValue}>{vehicle.ano}</PaperText>
+          </View>
+          <View style={styles.detailRow}>
+            <PaperText style={styles.detailLabel}>Cor:</PaperText>
+            <PaperText style={styles.detailValue}>{vehicle.cor}</PaperText>
+          </View>
+        </Card.Content>
+        <Card.Actions style={styles.actions}>
+          <Button
+            icon="pencil"
+            mode="contained"
+            onPress={() =>
+              navigation.navigate("VehicleForm", { vehicleId: vehicle.id })
+            }
+          >
+            Editar
+          </Button>
+          <Button
+            icon="delete"
+            mode="outlined"
+            onPress={showDialog}
+            textColor={colors.error}
+            style={{ borderColor: colors.error }}
+          >
+            Excluir
+          </Button>
+        </Card.Actions>
+      </Card>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0f0f0", padding: 16 },
-  detailText: {
-    fontSize: 18,
-    marginBottom: 8,
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "#f5f5f5",
   },
-  buttonContainer: {
-    marginTop: 20,
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  modalOverlay: {
+  loader: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  modalContainer: {
-    width: "80%",
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+  card: {
+    flex: 1,
   },
-  modalTitle: {
+  cardTitle: {
     fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
   },
-  modalText: {
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  modalButtonContainer: {
+  detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "100%",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  detailLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#666",
+  },
+  detailValue: {
+    fontSize: 16,
+  },
+  actions: {
+    justifyContent: "space-around",
+    padding: 16,
   },
 });
 
